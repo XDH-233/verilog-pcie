@@ -312,7 +312,7 @@ reg m_axi_rready_reg = 1'b0, m_axi_rready_next;
 reg s_axis_read_desc_ready_reg = 1'b0, s_axis_read_desc_ready_next;
 
 reg [TAG_WIDTH-1:0] m_axis_read_desc_status_tag_reg = {TAG_WIDTH{1'b0}}, m_axis_read_desc_status_tag_next;
-reg [3:0] m_axis_read_desc_status_error_reg = 4'd0, m_axis_read_desc_status_error_next;
+reg [3:0] m_axis_read_desc_status_error_reg, m_axis_read_desc_status_error_next;
 reg m_axis_read_desc_status_valid_reg = 1'b0, m_axis_read_desc_status_valid_next;
 
 reg status_busy_reg = 1'b0;
@@ -1014,7 +1014,7 @@ always @(posedge clk) begin
         m_axi_rready_reg <= 1'b0;
 
         s_axis_read_desc_ready_reg <= 1'b0;
-        m_axis_read_desc_status_error_reg = 4'd0;
+        m_axis_read_desc_status_error_reg <= 4'd0;
         m_axis_read_desc_status_valid_reg <= 1'b0;
 
         status_busy_reg <= 1'b0;

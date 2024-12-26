@@ -21,7 +21,7 @@
 TOPLEVEL_LANG = verilog
 
 SIM ?= icarus
-WAVES ?= 0
+WAVES ?= 1
 
 COCOTB_HDL_TIMEUNIT = 1ns
 COCOTB_HDL_TIMEPRECISION = 1ps
@@ -43,13 +43,13 @@ export PARAM_RAM_ADDR_WIDTH := 16
 export PARAM_RAM_SEG_COUNT := 2
 export PARAM_RAM_SEG_DATA_WIDTH := $(shell expr $(PARAM_AXI_DATA_WIDTH) \* 2 / $(PARAM_RAM_SEG_COUNT) )
 export PARAM_RAM_SEG_BE_WIDTH := $(shell expr $(PARAM_RAM_SEG_DATA_WIDTH) / 8 )
-export PARAM_RAM_SEG_ADDR_WIDTH := $(shell python -c "print($(PARAM_RAM_ADDR_WIDTH) - ($(PARAM_RAM_SEG_COUNT)*$(PARAM_RAM_SEG_BE_WIDTH)-1).bit_length())")
+export PARAM_RAM_SEG_ADDR_WIDTH := $(shell python3 -c "print($(PARAM_RAM_ADDR_WIDTH) - ($(PARAM_RAM_SEG_COUNT)*$(PARAM_RAM_SEG_BE_WIDTH)-1).bit_length())")
 export PARAM_IMM_ENABLE := 1
 export PARAM_IMM_WIDTH := $(PARAM_AXI_DATA_WIDTH)
 export PARAM_LEN_WIDTH := 16
 export PARAM_TAG_WIDTH := 8
-export PARAM_READ_OP_TABLE_SIZE := $(shell python -c "print(2**$(PARAM_AXI_ID_WIDTH))")
-export PARAM_WRITE_OP_TABLE_SIZE := $(shell python -c "print(2**$(PARAM_AXI_ID_WIDTH))")
+export PARAM_READ_OP_TABLE_SIZE := $(shell python3 -c "print(2**$(PARAM_AXI_ID_WIDTH))")
+export PARAM_WRITE_OP_TABLE_SIZE := $(shell python3 -c "print(2**$(PARAM_AXI_ID_WIDTH))")
 export PARAM_READ_USE_AXI_ID := 0
 export PARAM_WRITE_USE_AXI_ID := 1
 

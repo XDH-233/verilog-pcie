@@ -3,4 +3,7 @@
 *.pyc
 *.vvp
 *.kate-swp
+sim_build
+results.xml
+*.fst
 
