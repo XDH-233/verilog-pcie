@@ -447,7 +447,7 @@ always @* begin
         for (seg = 0; seg < OUT_TLP_SEG_COUNT; seg = seg + 1) begin
             if (int_tlp_valid[seg]) begin
                 seg_mem_wr_valid[cur_seg +: 1] = 1'b1;
-                seg_mem_wr_sel[cur_seg*SEG_SEL_WIDTH +: SEG_SEL_WIDTH] = seg; # FXIME: verilator ../V3Width.cpp:6391: Node VARREF 'seg' has no expected width?? Missing Visitor func?
+                seg_mem_wr_sel[cur_seg*SEG_SEL_WIDTH +: SEG_SEL_WIDTH] = seg; // FXIME: verilator ../V3Width.cpp:6391: Node VARREF 'seg' has no expected width?? Missing Visitor func?
                 cur_seg = cur_seg + 1;
                 if (int_tlp_eop[seg]) begin
                     eop_seg = seg_count;
