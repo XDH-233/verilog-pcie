@@ -214,7 +214,8 @@ def cycle_pause():
 
 
 def size_list():
-    return list(range(0, 512+1, 4))+[4]*64
+    # return list(range(0, 512+1, 4))+[4]*64
+    return [0]
 
 
 def incrementing_payload(length):

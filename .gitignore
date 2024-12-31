@@ -8,4 +8,5 @@ results.xml
 *.fst
 *.log
 iverilog_dump.v
+*.gtkw
 

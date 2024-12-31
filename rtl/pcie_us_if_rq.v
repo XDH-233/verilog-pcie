@@ -34,7 +34,7 @@ THE SOFTWARE.
 module pcie_us_if_rq #
 (
     // Width of PCIe AXI stream interfaces in bits
-    parameter AXIS_PCIE_DATA_WIDTH = 256,
+    parameter AXIS_PCIE_DATA_WIDTH = 512,
     // PCIe AXI stream tkeep signal width (words per cycle)
     parameter AXIS_PCIE_KEEP_WIDTH = (AXIS_PCIE_DATA_WIDTH/32),
     // PCIe AXI stream RQ tuser signal width
