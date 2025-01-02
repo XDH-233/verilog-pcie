@@ -9,4 +9,5 @@ results.xml
 *.log
 iverilog_dump.v
 *.gtkw
+.DS_*
 

@@ -144,6 +144,78 @@ localparam [3:0]
     REQ_MSG_VENDOR = 4'b1101,
     REQ_MSG_ATS = 4'b1110;
 
+// axis user
+wire [ 8-1:0] first_be;
+wire [ 8-1:0] last_be;
+wire [ 6-1:0] byte_en;
+wire [ 2-1:0] is_sop;
+wire [ 2-1:0] is_sop0_ptr;
+wire [ 2-1:0] is_sop1_ptr;
+wire [ 2-1:0] is_eop;
+wire [ 4-1:0] is_eop0_ptr;
+wire [ 4-1:0] is_eop1_ptr;
+wire          discontinue;
+wire [2 -1:0] tph_present;
+wire [4 -1:0] tph_type;
+wire [16-1:0] tph_st_tag;
+wire [64-1:0] parity;
+
+// axis_data descriptors
+wire [2-1 :0] address_type_0   ;
+wire [62-1:0] address_0        ;
+wire [11-1:0] dword_count_0    ;
+wire [4-1 :0] request_type_0   ;
+wire [1-1 :0] rsv0_0           ;
+wire [16-1:0] requester_id_0   ;
+wire [8-1 :0] tag_0            ;
+wire [8-1 :0] target_function_0;
+wire [3-1 :0] bar_id_0         ;
+wire [6-1 :0] bar_aperture_0   ;
+wire [3-1 :0] tc_0             ;
+wire [3-1 :0] attr_0           ;
+wire [1-1 :0] rsv1_0           ;
+wire [2-1 :0] address_type_1   ;
+wire [62-1:0] address_1        ;
+wire [11-1:0] dword_count_1    ;
+wire [4-1 :0] request_type_1   ;
+wire [1-1 :0] rsv0_1           ;
+wire [16-1:0] requester_id_1   ;
+wire [8-1 :0] tag_1            ;
+wire [8-1 :0] target_function_1;
+wire [3-1 :0] bar_id_1         ;
+wire [6-1 :0] bar_aperture_1   ;
+wire [3-1 :0] tc_1             ;
+wire [3-1 :0] attr_1           ;
+wire [1-1 :0] rsv1_1           ;
+wire [2-1 :0] address_type_2   ;
+wire [62-1:0] address_2        ;
+wire [11-1:0] dword_count_2    ;
+wire [4-1 :0] request_type_2   ;
+wire [1-1 :0] rsv0_2           ;
+wire [16-1:0] requester_id_2   ;
+wire [8-1 :0] tag_2            ;
+wire [8-1 :0] target_function_2;
+wire [3-1 :0] bar_id_2         ;
+wire [6-1 :0] bar_aperture_2   ;
+wire [3-1 :0] tc_2             ;
+wire [3-1 :0] attr_2           ;
+wire [1-1 :0] rsv1_2           ;
+wire [2-1 :0] address_type_3   ;
+wire [62-1:0] address_3        ;
+wire [11-1:0] dword_count_3    ;
+wire [4-1 :0] request_type_3   ;
+wire [1-1 :0] rsv0_3           ;
+wire [16-1:0] requester_id_3   ;
+wire [8-1 :0] tag_3            ;
+wire [8-1 :0] target_function_3;
+wire [3-1 :0] bar_id_3         ;
+wire [6-1 :0] bar_aperture_3   ;
+wire [3-1 :0] tc_3             ;
+wire [3-1 :0] attr_3           ;
+wire [1-1 :0] rsv1_3           ;
+
+
+
 reg [TLP_DATA_WIDTH-1:0] rx_req_tlp_data_reg = 0, rx_req_tlp_data_next;
 reg [TLP_STRB_WIDTH-1:0] rx_req_tlp_strb_reg = 0, rx_req_tlp_strb_next;
 reg [INT_TLP_SEG_COUNT*TLP_HDR_WIDTH-1:0] rx_req_tlp_hdr_reg = 0, rx_req_tlp_hdr_next;
@@ -189,6 +261,15 @@ reg [INT_TLP_SEG_COUNT*3-1:0] tlp_bar_id;
 reg [INT_TLP_SEG_COUNT*8-1:0] tlp_func_num;
 
 assign s_axis_cq_tready = fifo_tlp_ready;
+
+assign {parity,tph_st_tag,tph_type,tph_present,discontinue,is_eop1_ptr,is_eop0_ptr,is_eop,is_sop1_ptr,is_sop0_ptr,is_sop,byte_en,last_be,first_be} = s_axis_cq_tuser;
+assign {rsv1_0,attr_0,tc_0,bar_aperture_0,bar_id_0,target_function_0,tag_0,requester_id_0,rsv0_0,request_type_0,dword_count_0,address_0,address_type_0} = s_axis_cq_tdata[0+:128];
+
+assign {rsv1_1,attr_1,tc_1,bar_aperture_1,bar_id_1,target_function_1,tag_1,requester_id_1,rsv0_1,request_type_1,dword_count_1,address_1,address_type_1} = s_axis_cq_tdata[128+:128];
+
+assign {rsv1_2,attr_2,tc_2,bar_aperture_2,bar_id_2,target_function_2,tag_2,requester_id_2,rsv0_2,request_type_2,dword_count_2,address_2,address_type_2} = s_axis_cq_tdata[256+:128];
+
+assign {rsv1_3,attr_3,tc_3,bar_aperture_3,bar_id_3,target_function_3,tag_3,requester_id_3,rsv0_3,request_type_3,dword_count_3,address_3,address_type_3} = s_axis_cq_tdata[384+:128];
 
 pcie_tlp_fifo #(
     .DEPTH((1024/4)*2),
