@@ -57,25 +57,25 @@ module pcie_us_if_cq #
     /*
      * AXI input (CQ)
      */
-    input  wire [AXIS_PCIE_DATA_WIDTH-1:0]              s_axis_cq_tdata,
-    input  wire [AXIS_PCIE_KEEP_WIDTH-1:0]              s_axis_cq_tkeep,
-    input  wire                                         s_axis_cq_tvalid,
-    output wire                                         s_axis_cq_tready,
-    input  wire                                         s_axis_cq_tlast,
-    input  wire [AXIS_PCIE_CQ_USER_WIDTH-1:0]           s_axis_cq_tuser,
+    input  wire [AXIS_PCIE_DATA_WIDTH-1:0]        s_axis_cq_tdata,
+    input  wire [AXIS_PCIE_KEEP_WIDTH-1:0]        s_axis_cq_tkeep,
+    input  wire                                   s_axis_cq_tvalid,
+    output wire                                   s_axis_cq_tready,
+    input  wire                                   s_axis_cq_tlast,
+    input  wire [AXIS_PCIE_CQ_USER_WIDTH-1:0]     s_axis_cq_tuser,
 
     /*
      * TLP output (request to BAR)
      */
-    output wire [TLP_DATA_WIDTH-1:0]                    rx_req_tlp_data,
-    output wire [TLP_STRB_WIDTH-1:0]                    rx_req_tlp_strb,
-    output wire [TLP_SEG_COUNT*TLP_HDR_WIDTH-1:0]       rx_req_tlp_hdr,
-    output wire [TLP_SEG_COUNT*3-1:0]                   rx_req_tlp_bar_id,
-    output wire [TLP_SEG_COUNT*8-1:0]                   rx_req_tlp_func_num,
-    output wire [TLP_SEG_COUNT-1:0]                     rx_req_tlp_valid,
-    output wire [TLP_SEG_COUNT-1:0]                     rx_req_tlp_sop,
-    output wire [TLP_SEG_COUNT-1:0]                     rx_req_tlp_eop,
-    input  wire                                         rx_req_tlp_ready
+    output wire [             TLP_DATA_WIDTH-1:0] rx_req_tlp_data,
+    output wire [             TLP_STRB_WIDTH-1:0] rx_req_tlp_strb,
+    output wire [TLP_SEG_COUNT*TLP_HDR_WIDTH-1:0] rx_req_tlp_hdr,
+    output wire [            TLP_SEG_COUNT*3-1:0] rx_req_tlp_bar_id,
+    output wire [            TLP_SEG_COUNT*8-1:0] rx_req_tlp_func_num,
+    output wire [              TLP_SEG_COUNT-1:0] rx_req_tlp_valid,
+    output wire [              TLP_SEG_COUNT-1:0] rx_req_tlp_sop,
+    output wire [              TLP_SEG_COUNT-1:0] rx_req_tlp_eop,
+    input  wire                                   rx_req_tlp_ready
 );
 
 parameter TLP_DATA_WIDTH_BYTES = TLP_DATA_WIDTH/8;
@@ -121,33 +121,33 @@ initial begin
 end
 
 localparam [2:0]
-    TLP_FMT_3DW = 3'b000,
-    TLP_FMT_4DW = 3'b001,
+    TLP_FMT_3DW      = 3'b000,
+    TLP_FMT_4DW      = 3'b001,
     TLP_FMT_3DW_DATA = 3'b010,
     TLP_FMT_4DW_DATA = 3'b011,
-    TLP_FMT_PREFIX = 3'b100;
+    TLP_FMT_PREFIX   = 3'b100;
 
 localparam [3:0]
-    REQ_MEM_READ = 4'b0000,
-    REQ_MEM_WRITE = 4'b0001,
-    REQ_IO_READ = 4'b0010,
-    REQ_IO_WRITE = 4'b0011,
-    REQ_MEM_FETCH_ADD = 4'b0100,
-    REQ_MEM_SWAP = 4'b0101,
-    REQ_MEM_CAS = 4'b0110,
+    REQ_MEM_READ        = 4'b0000,
+    REQ_MEM_WRITE       = 4'b0001,
+    REQ_IO_READ         = 4'b0010,
+    REQ_IO_WRITE        = 4'b0011,
+    REQ_MEM_FETCH_ADD   = 4'b0100,
+    REQ_MEM_SWAP        = 4'b0101,
+    REQ_MEM_CAS         = 4'b0110,
     REQ_MEM_READ_LOCKED = 4'b0111,
-    REQ_CFG_READ_0 = 4'b1000,
-    REQ_CFG_READ_1 = 4'b1001,
-    REQ_CFG_WRITE_0 = 4'b1010,
-    REQ_CFG_WRITE_1 = 4'b1011,
-    REQ_MSG = 4'b1100,
-    REQ_MSG_VENDOR = 4'b1101,
-    REQ_MSG_ATS = 4'b1110;
+    REQ_CFG_READ_0      = 4'b1000,
+    REQ_CFG_READ_1      = 4'b1001,
+    REQ_CFG_WRITE_0     = 4'b1010,
+    REQ_CFG_WRITE_1     = 4'b1011,
+    REQ_MSG             = 4'b1100,
+    REQ_MSG_VENDOR      = 4'b1101,
+    REQ_MSG_ATS         = 4'b1110;
 
 // axis user
 wire [ 8-1:0] first_be;
 wire [ 8-1:0] last_be;
-wire [ 6-1:0] byte_en;
+wire [64-1:0] byte_en;
 wire [ 2-1:0] is_sop;
 wire [ 2-1:0] is_sop0_ptr;
 wire [ 2-1:0] is_sop1_ptr;
@@ -216,59 +216,57 @@ wire [1-1 :0] rsv1_3           ;
 
 
 
-reg [TLP_DATA_WIDTH-1:0] rx_req_tlp_data_reg = 0, rx_req_tlp_data_next;
-reg [TLP_STRB_WIDTH-1:0] rx_req_tlp_strb_reg = 0, rx_req_tlp_strb_next;
-reg [INT_TLP_SEG_COUNT*TLP_HDR_WIDTH-1:0] rx_req_tlp_hdr_reg = 0, rx_req_tlp_hdr_next;
-reg [INT_TLP_SEG_COUNT*3-1:0] rx_req_tlp_bar_id_reg = 0, rx_req_tlp_bar_id_next;
-reg [INT_TLP_SEG_COUNT*8-1:0] rx_req_tlp_func_num_reg = 0, rx_req_tlp_func_num_next;
-reg [INT_TLP_SEG_COUNT-1:0] rx_req_tlp_valid_reg = 0, rx_req_tlp_valid_next;
-reg [INT_TLP_SEG_COUNT-1:0] rx_req_tlp_sop_reg = 0, rx_req_tlp_sop_next;
-reg [INT_TLP_SEG_COUNT-1:0] rx_req_tlp_eop_reg = 0, rx_req_tlp_eop_next;
+reg [                 TLP_DATA_WIDTH-1:0] rx_req_tlp_data_reg     = 0, rx_req_tlp_data_next;
+reg [                 TLP_STRB_WIDTH-1:0] rx_req_tlp_strb_reg     = 0, rx_req_tlp_strb_next;
+reg [INT_TLP_SEG_COUNT*TLP_HDR_WIDTH-1:0] rx_req_tlp_hdr_reg      = 0, rx_req_tlp_hdr_next;
+reg [            INT_TLP_SEG_COUNT*3-1:0] rx_req_tlp_bar_id_reg   = 0, rx_req_tlp_bar_id_next;
+reg [            INT_TLP_SEG_COUNT*8-1:0] rx_req_tlp_func_num_reg = 0, rx_req_tlp_func_num_next;
+reg [              INT_TLP_SEG_COUNT-1:0] rx_req_tlp_valid_reg    = 0, rx_req_tlp_valid_next;
+reg [              INT_TLP_SEG_COUNT-1:0] rx_req_tlp_sop_reg      = 0, rx_req_tlp_sop_next;
+reg [              INT_TLP_SEG_COUNT-1:0] rx_req_tlp_eop_reg      = 0, rx_req_tlp_eop_next;
 reg tlp_frame_reg = 0, tlp_frame_next;
 
 wire fifo_tlp_ready;
 
 reg tlp_input_frame_reg = 1'b0, tlp_input_frame_next;
 
-reg [TLP_DATA_WIDTH-1:0] cq_data;
-reg [TLP_STRB_WIDTH-1:0] cq_strb;
+reg [     TLP_DATA_WIDTH-1:0] cq_data;
+reg [     TLP_STRB_WIDTH-1:0] cq_strb;
 reg [INT_TLP_SEG_COUNT*8-1:0] cq_hdr_be;
-reg [INT_TLP_SEG_COUNT-1:0] cq_valid;
-reg [TLP_STRB_WIDTH-1:0] cq_strb_sop;
-reg [TLP_STRB_WIDTH-1:0] cq_strb_eop;
-reg [INT_TLP_SEG_COUNT-1:0] cq_sop;
-reg [INT_TLP_SEG_COUNT-1:0] cq_eop;
+reg [  INT_TLP_SEG_COUNT-1:0] cq_valid;
+reg [     TLP_STRB_WIDTH-1:0] cq_strb_sop;
+reg [     TLP_STRB_WIDTH-1:0] cq_strb_eop;
+reg [  INT_TLP_SEG_COUNT-1:0] cq_sop;
+reg [  INT_TLP_SEG_COUNT-1:0] cq_eop;
 reg cq_frame_reg = 1'b0, cq_frame_next;
 
-reg [TLP_DATA_WIDTH-1:0] cq_data_int_reg = 0, cq_data_int_next;
-reg [TLP_STRB_WIDTH-1:0] cq_strb_int_reg = 0, cq_strb_int_next;
-reg [INT_TLP_SEG_COUNT*8-1:0] cq_hdr_be_int_reg = 0, cq_hdr_be_int_next;
-reg [INT_TLP_SEG_COUNT-1:0] cq_valid_int_reg = 0, cq_valid_int_next;
-reg [TLP_STRB_WIDTH-1:0] cq_strb_eop_int_reg = 0, cq_strb_eop_int_next;
-reg [INT_TLP_SEG_COUNT-1:0] cq_sop_int_reg = 0, cq_sop_int_next;
-reg [INT_TLP_SEG_COUNT-1:0] cq_eop_int_reg = 0, cq_eop_int_next;
+reg [     TLP_DATA_WIDTH-1:0] cq_data_int_reg     = 0, cq_data_int_next;
+reg [     TLP_STRB_WIDTH-1:0] cq_strb_int_reg     = 0, cq_strb_int_next;
+reg [INT_TLP_SEG_COUNT*8-1:0] cq_hdr_be_int_reg   = 0, cq_hdr_be_int_next;
+reg [  INT_TLP_SEG_COUNT-1:0] cq_valid_int_reg    = 0, cq_valid_int_next;
+reg [     TLP_STRB_WIDTH-1:0] cq_strb_eop_int_reg = 0, cq_strb_eop_int_next;
+reg [  INT_TLP_SEG_COUNT-1:0] cq_sop_int_reg      = 0, cq_sop_int_next;
+reg [  INT_TLP_SEG_COUNT-1:0] cq_eop_int_reg      = 0, cq_eop_int_next;
 
-wire [TLP_DATA_WIDTH*2-1:0] cq_data_full = {cq_data, cq_data_int_reg};
-wire [TLP_STRB_WIDTH*2-1:0] cq_strb_full = {cq_strb, cq_strb_int_reg};
-wire [INT_TLP_SEG_COUNT*8*2-1:0] cq_hdr_be_full = {cq_hdr_be, cq_hdr_be_int_reg};
-wire [INT_TLP_SEG_COUNT*2-1:0] cq_valid_full = {cq_valid, cq_valid_int_reg};
-wire [TLP_STRB_WIDTH*2-1:0] cq_strb_eop_full = {cq_strb_eop, cq_strb_eop_int_reg};
-wire [INT_TLP_SEG_COUNT*2-1:0] cq_sop_full = {cq_sop, cq_sop_int_reg};
-wire [INT_TLP_SEG_COUNT*2-1:0] cq_eop_full = {cq_eop, cq_eop_int_reg};
+wire [     TLP_DATA_WIDTH*2-1:0] cq_data_full     = {cq_data, cq_data_int_reg};
+wire [     TLP_STRB_WIDTH*2-1:0] cq_strb_full     = {cq_strb, cq_strb_int_reg};
+wire [INT_TLP_SEG_COUNT*8*2-1:0] cq_hdr_be_full   = {cq_hdr_be, cq_hdr_be_int_reg};
+wire [  INT_TLP_SEG_COUNT*2-1:0] cq_valid_full    = {cq_valid, cq_valid_int_reg};
+wire [     TLP_STRB_WIDTH*2-1:0] cq_strb_eop_full = {cq_strb_eop, cq_strb_eop_int_reg};
+wire [  INT_TLP_SEG_COUNT*2-1:0] cq_sop_full      = {cq_sop, cq_sop_int_reg};
+wire [  INT_TLP_SEG_COUNT*2-1:0] cq_eop_full      = {cq_eop, cq_eop_int_reg};
 
 reg [INT_TLP_SEG_COUNT*128-1:0] tlp_hdr;
-reg [INT_TLP_SEG_COUNT*3-1:0] tlp_bar_id;
-reg [INT_TLP_SEG_COUNT*8-1:0] tlp_func_num;
+reg [  INT_TLP_SEG_COUNT*3-1:0] tlp_bar_id;
+reg [  INT_TLP_SEG_COUNT*8-1:0] tlp_func_num;
 
 assign s_axis_cq_tready = fifo_tlp_ready;
 
 assign {parity,tph_st_tag,tph_type,tph_present,discontinue,is_eop1_ptr,is_eop0_ptr,is_eop,is_sop1_ptr,is_sop0_ptr,is_sop,byte_en,last_be,first_be} = s_axis_cq_tuser;
+
 assign {rsv1_0,attr_0,tc_0,bar_aperture_0,bar_id_0,target_function_0,tag_0,requester_id_0,rsv0_0,request_type_0,dword_count_0,address_0,address_type_0} = s_axis_cq_tdata[0+:128];
-
 assign {rsv1_1,attr_1,tc_1,bar_aperture_1,bar_id_1,target_function_1,tag_1,requester_id_1,rsv0_1,request_type_1,dword_count_1,address_1,address_type_1} = s_axis_cq_tdata[128+:128];
-
 assign {rsv1_2,attr_2,tc_2,bar_aperture_2,bar_id_2,target_function_2,tag_2,requester_id_2,rsv0_2,request_type_2,dword_count_2,address_2,address_type_2} = s_axis_cq_tdata[256+:128];
-
 assign {rsv1_3,attr_3,tc_3,bar_aperture_3,bar_id_3,target_function_3,tag_3,requester_id_3,rsv0_3,request_type_3,dword_count_3,address_3,address_type_3} = s_axis_cq_tdata[384+:128];
 
 pcie_tlp_fifo #(
@@ -356,11 +354,11 @@ always @* begin
         cq_sop = 0;
         cq_eop = 0;
         for (seg = 0; seg < INT_TLP_SEG_COUNT; seg = seg + 1) begin
-            if (s_axis_cq_tuser[80+seg]) begin
-                cq_strb_sop[s_axis_cq_tuser[82+seg*2 +: 2]*4] = 1'b1;
+            if (s_axis_cq_tuser[80+seg]) begin                        // is_sop[i]
+                cq_strb_sop[s_axis_cq_tuser[82+seg*2 +: 2]*4] = 1'b1; // is_sopi_ptr
             end
-            if (s_axis_cq_tuser[86+seg]) begin
-                cq_strb_eop[s_axis_cq_tuser[88+seg*4 +: 4]] = 1'b1;
+            if (s_axis_cq_tuser[86+seg]) begin                        // is_eop[i]
+                cq_strb_eop[s_axis_cq_tuser[88+seg*4 +: 4]] = 1'b1;   // is_eopi_ptr
             end
         end
         valid = 1;
