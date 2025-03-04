@@ -20,18 +20,25 @@
 
 TOPLEVEL_LANG = verilog
 
-SIM ?= icarus
+ifdef VCS_HOME
+	SIM ?= vcs
+else
+	SIM ?= verilator
+endif
+
 WAVES ?= 1
 
 COCOTB_HDL_TIMEUNIT = 1ns
 COCOTB_HDL_TIMEPRECISION = 1ps
 
+PWD = $(shell pwd)
+
 DUT      = pcie_us_if_cq
 TOPLEVEL = $(DUT)
 MODULE   = test_$(DUT)
-VERILOG_SOURCES += ../../rtl/$(DUT).v
-VERILOG_SOURCES += ../../rtl/pcie_tlp_fifo.v
-VERILOG_SOURCES += ../../rtl/pcie_tlp_fifo_raw.v
+VERILOG_SOURCES += $(PWD)/../../rtl/$(DUT).v
+VERILOG_SOURCES += $(PWD)/../../rtl/pcie_tlp_fifo.v
+VERILOG_SOURCES += $(PWD)/../../rtl/pcie_tlp_fifo_raw.v
 
 # module parameters
 # export PARAM_AXIS_PCIE_DATA_WIDTH := 64
@@ -43,7 +50,25 @@ VERILOG_SOURCES += ../../rtl/pcie_tlp_fifo_raw.v
 # export PARAM_TLP_HDR_WIDTH := 128
 # export PARAM_TLP_SEG_COUNT := 1
 
-ifeq ($(SIM), icarus)
+ifeq ($(SIM), vcs)
+	COMPILE_ARGS = +v2k \
+		-full64 \
+		-fsdb \
+		+vcs+fsdbon \
+		-sverilog \
+		-debug_acc+all -debug_region+cell+encrypt \
+		-LDFLAGS -Wl,--no-as-needed \
+		-timescale=1ns/1ps \
+		-debug_access+r+w+nomemcbk -debug_region+cell \
+		+vpi \
+		+lint=PCWM \
+		-kdb \
+		-lca \
+		-l build.log \
+		+lint=TFIPC-L \
+		+error+10000
+
+else ifeq ($(SIM), icarus)
 	PLUSARGS += -fst
 
 	COMPILE_ARGS += $(foreach v,$(filter PARAM_%,$(.VARIABLES)),-P $(TOPLEVEL).$(subst PARAM_,,$(v))=$($(v)))

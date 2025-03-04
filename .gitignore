@@ -6,8 +6,13 @@
 sim_build
 results.xml
 *.fst
+stack.info*
+verdiLog
+novas.*
 *.log
+ucli.key*.log
 iverilog_dump.v
 *.gtkw
 .DS_*
+ucli.key
 
