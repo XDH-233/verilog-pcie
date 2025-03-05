@@ -184,7 +184,8 @@ def cycle_pause():
 
 def size_list():
     # return list(range(0, 512+1, 4))+[4]*64
-    return [0,0,0, 0,200]
+    # 0 -> rd_req, (>0) -> write_req(with payload)
+    return [200]
 
 
 def incrementing_payload(length):
@@ -214,8 +215,7 @@ tests_dir = os.path.dirname(__file__)
 rtl_dir = os.path.abspath(os.path.join(tests_dir, '..', '..', 'rtl'))
 
 
-# @pytest.mark.parametrize(("axis_pcie_data_width", "straddle"),
-#     [(64, False), (128, False), (256, False), (512, False), (512, True)])
+# @pytest.mark.parametrize(("axis_pcie_data_width", "straddle"), [(64, False), (128, False), (256, False), (512, False), (512, True)])
 def test_pcie_us_if_cq(request, axis_pcie_data_width, straddle):
     dut = "pcie_us_if_cq"
     module = os.path.splitext(os.path.basename(__file__))[0]
@@ -244,6 +244,7 @@ def test_pcie_us_if_cq(request, axis_pcie_data_width, straddle):
         request.node.name.replace('[', '-').replace(']', ''))
 
     cocotb_test.simulator.run(
+        # simulator = "verilator",
         python_search=[tests_dir],
         verilog_sources=verilog_sources,
         toplevel=toplevel,

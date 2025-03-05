@@ -187,32 +187,6 @@ wire [6-1 :0] bar_aperture_1   ;
 wire [3-1 :0] tc_1             ;
 wire [3-1 :0] attr_1           ;
 wire [1-1 :0] rsv1_1           ;
-wire [2-1 :0] address_type_2   ;
-wire [62-1:0] address_2        ;
-wire [11-1:0] dword_count_2    ;
-wire [4-1 :0] request_type_2   ;
-wire [1-1 :0] rsv0_2           ;
-wire [16-1:0] requester_id_2   ;
-wire [8-1 :0] tag_2            ;
-wire [8-1 :0] target_function_2;
-wire [3-1 :0] bar_id_2         ;
-wire [6-1 :0] bar_aperture_2   ;
-wire [3-1 :0] tc_2             ;
-wire [3-1 :0] attr_2           ;
-wire [1-1 :0] rsv1_2           ;
-wire [2-1 :0] address_type_3   ;
-wire [62-1:0] address_3        ;
-wire [11-1:0] dword_count_3    ;
-wire [4-1 :0] request_type_3   ;
-wire [1-1 :0] rsv0_3           ;
-wire [16-1:0] requester_id_3   ;
-wire [8-1 :0] tag_3            ;
-wire [8-1 :0] target_function_3;
-wire [3-1 :0] bar_id_3         ;
-wire [6-1 :0] bar_aperture_3   ;
-wire [3-1 :0] tc_3             ;
-wire [3-1 :0] attr_3           ;
-wire [1-1 :0] rsv1_3           ;
 
 
 
@@ -256,6 +230,48 @@ wire [     TLP_STRB_WIDTH*2-1:0] cq_strb_eop_full = {cq_strb_eop, cq_strb_eop_in
 wire [  INT_TLP_SEG_COUNT*2-1:0] cq_sop_full      = {cq_sop, cq_sop_int_reg};
 wire [  INT_TLP_SEG_COUNT*2-1:0] cq_eop_full      = {cq_eop, cq_eop_int_reg};
 
+
+wire [2-1 :0] tlp_hdr0_ph           ;
+wire [62-1:0] tlp_hdr0_address      ;
+wire [4-1 :0] tlp_hdr0_first_dw_be  ;
+wire [4-1 :0] tlp_hdr0_last_dw_be   ;
+wire [8-1 :0] tlp_hdr0_tag          ;
+wire [16-1:0] tlp_hdr0_requested_id ;
+wire [10-1:0] tlp_hdr0_length       ;
+wire [2-1 :0] tlp_hdr0_at           ;
+wire [2-1 :0] tlp_hdr0_attr_l       ;
+wire [1-1 :0] tlp_hdr0_ep           ;
+wire [1-1 :0] tlp_hdr0_td           ;
+wire [1-1 :0] tlp_hdr0_th           ;
+wire [1-1 :0] tlp_hdr0_rsv2         ;
+wire [1-1 :0] tlp_hdr0_attr_h       ;
+wire [1-1 :0] tlp_hdr0_rsv1         ;
+wire [3-1 :0] tlp_hdr0_tc           ;
+wire [1-1 :0] tlp_hdr0_rsv0         ;
+wire [5-1 :0] tlp_hdr0_type_        ;
+wire [3-1 :0] tlp_hdr0_fmt          ;
+
+wire [2-1 :0] tlp_hdr1_ph           ;
+wire [62-1:0] tlp_hdr1_address      ;
+wire [4-1 :0] tlp_hdr1_first_dw_be  ;
+wire [4-1 :0] tlp_hdr1_last_dw_be   ;
+wire [8-1 :0] tlp_hdr1_tag          ;
+wire [16-1:0] tlp_hdr1_requested_id ;
+wire [10-1:0] tlp_hdr1_length       ;
+wire [2-1 :0] tlp_hdr1_at           ;
+wire [2-1 :0] tlp_hdr1_attr_l       ;
+wire [1-1 :0] tlp_hdr1_ep           ;
+wire [1-1 :0] tlp_hdr1_td           ;
+wire [1-1 :0] tlp_hdr1_th           ;
+wire [1-1 :0] tlp_hdr1_rsv2         ;
+wire [1-1 :0] tlp_hdr1_attr_h       ;
+wire [1-1 :0] tlp_hdr1_rsv1         ;
+wire [3-1 :0] tlp_hdr1_tc           ;
+wire [1-1 :0] tlp_hdr1_rsv0         ;
+wire [5-1 :0] tlp_hdr1_type_        ;
+wire [3-1 :0] tlp_hdr1_fmt          ;
+
+
 reg [INT_TLP_SEG_COUNT*128-1:0] tlp_hdr;
 reg [  INT_TLP_SEG_COUNT*3-1:0] tlp_bar_id;
 reg [  INT_TLP_SEG_COUNT*8-1:0] tlp_func_num;
@@ -265,9 +281,51 @@ assign s_axis_cq_tready = fifo_tlp_ready;
 assign {parity,tph_st_tag,tph_type,tph_present,discontinue,is_eop1_ptr,is_eop0_ptr,is_eop,is_sop1_ptr,is_sop0_ptr,is_sop,byte_en,last_be,first_be} = s_axis_cq_tuser;
 
 assign {rsv1_0,attr_0,tc_0,bar_aperture_0,bar_id_0,target_function_0,tag_0,requester_id_0,rsv0_0,request_type_0,dword_count_0,address_0,address_type_0} = s_axis_cq_tdata[0+:128];
-assign {rsv1_1,attr_1,tc_1,bar_aperture_1,bar_id_1,target_function_1,tag_1,requester_id_1,rsv0_1,request_type_1,dword_count_1,address_1,address_type_1} = s_axis_cq_tdata[128+:128];
-assign {rsv1_2,attr_2,tc_2,bar_aperture_2,bar_id_2,target_function_2,tag_2,requester_id_2,rsv0_2,request_type_2,dword_count_2,address_2,address_type_2} = s_axis_cq_tdata[256+:128];
-assign {rsv1_3,attr_3,tc_3,bar_aperture_3,bar_id_3,target_function_3,tag_3,requester_id_3,rsv0_3,request_type_3,dword_count_3,address_3,address_type_3} = s_axis_cq_tdata[384+:128];
+assign {rsv1_1,attr_1,tc_1,bar_aperture_1,bar_id_1,target_function_1,tag_1,requester_id_1,rsv0_1,request_type_1,dword_count_1,address_1,address_type_1} = s_axis_cq_tdata[256+:128];
+
+
+assign {tlp_hdr0_fmt,
+    tlp_hdr0_ep,
+    tlp_hdr0_type_,
+    tlp_hdr0_rsv0,
+    tlp_hdr0_tc,
+    tlp_hdr0_rsv1,
+    tlp_hdr0_attr_h,
+    tlp_hdr0_rsv2,
+    tlp_hdr0_th,
+    tlp_hdr0_td,
+    tlp_hdr0_attr_l,
+    tlp_hdr0_at,
+    tlp_hdr0_length,
+    tlp_hdr0_requested_id,
+    tlp_hdr0_tag,
+    tlp_hdr0_last_dw_be,
+    tlp_hdr0_first_dw_be,
+    tlp_hdr0_address,
+    tlp_hdr0_ph
+} = tlp_hdr[127:0];
+
+assign {tlp_hdr1_fmt,
+    tlp_hdr1_ep,
+    tlp_hdr1_type_,
+    tlp_hdr1_rsv0,
+    tlp_hdr1_tc,
+    tlp_hdr1_rsv1,
+    tlp_hdr1_attr_h,
+    tlp_hdr1_rsv2,
+    tlp_hdr1_th,
+    tlp_hdr1_td,
+    tlp_hdr1_attr_l,
+    tlp_hdr1_at,
+    tlp_hdr1_length,
+    tlp_hdr1_requested_id,
+    tlp_hdr1_tag,
+    tlp_hdr1_last_dw_be,
+    tlp_hdr1_first_dw_be,
+    tlp_hdr1_address,
+    tlp_hdr1_ph
+} = tlp_hdr[255:128];
+
 
 pcie_tlp_fifo #(
     .DEPTH((1024/4)*2),
@@ -352,16 +410,16 @@ always @* begin
         cq_strb_sop = 0;
         cq_strb_eop = 0;
         cq_sop = 0;
-        cq_eop = 0;
         for (seg = 0; seg < INT_TLP_SEG_COUNT; seg = seg + 1) begin
             if (s_axis_cq_tuser[80+seg]) begin                        // is_sop[i]
-                cq_strb_sop[s_axis_cq_tuser[82+seg*2 +: 2]*4] = 1'b1; // is_sopi_ptr
+                cq_strb_sop[s_axis_cq_tuser[82+seg*2 +: 2]*4] = 1'b1; // is_sopi_ptr, assert 0 or 8
             end
             if (s_axis_cq_tuser[86+seg]) begin                        // is_eop[i]
-                cq_strb_eop[s_axis_cq_tuser[88+seg*4 +: 4]] = 1'b1;   // is_eopi_ptr
+                cq_strb_eop[s_axis_cq_tuser[88+seg*4 +: 4]] = 1'b1;   // is_eopi_ptr, assert 
             end
         end
         valid = 1;
+        cq_eop = 0;
         for (lane = 0; lane < TLP_STRB_WIDTH; lane = lane + 1) begin
             if (cq_strb_sop[lane]) begin
                 valid = 1;
@@ -568,25 +626,25 @@ always @* begin
 end
 
 always @(posedge clk) begin
-    rx_req_tlp_data_reg <= rx_req_tlp_data_next;
-    rx_req_tlp_strb_reg <= rx_req_tlp_strb_next;
-    rx_req_tlp_hdr_reg <= rx_req_tlp_hdr_next;
-    rx_req_tlp_bar_id_reg <= rx_req_tlp_bar_id_next;
+    rx_req_tlp_data_reg     <= rx_req_tlp_data_next;
+    rx_req_tlp_strb_reg     <= rx_req_tlp_strb_next;
+    rx_req_tlp_hdr_reg      <= rx_req_tlp_hdr_next;
+    rx_req_tlp_bar_id_reg   <= rx_req_tlp_bar_id_next;
     rx_req_tlp_func_num_reg <= rx_req_tlp_func_num_next;
-    rx_req_tlp_valid_reg <= rx_req_tlp_valid_next;
-    rx_req_tlp_sop_reg <= rx_req_tlp_sop_next;
-    rx_req_tlp_eop_reg <= rx_req_tlp_eop_next;
-    tlp_frame_reg <= tlp_frame_next;
+    rx_req_tlp_valid_reg    <= rx_req_tlp_valid_next;
+    rx_req_tlp_sop_reg      <= rx_req_tlp_sop_next;
+    rx_req_tlp_eop_reg      <= rx_req_tlp_eop_next;
+    tlp_frame_reg           <= tlp_frame_next;
 
     cq_frame_reg <= cq_frame_next;
 
-    cq_data_int_reg <= cq_data_int_next;
-    cq_strb_int_reg <= cq_strb_int_next;
-    cq_hdr_be_int_reg <= cq_hdr_be_int_next;
-    cq_valid_int_reg <= cq_valid_int_next;
+    cq_data_int_reg     <= cq_data_int_next;
+    cq_strb_int_reg     <= cq_strb_int_next;
+    cq_hdr_be_int_reg   <= cq_hdr_be_int_next;
+    cq_valid_int_reg    <= cq_valid_int_next;
     cq_strb_eop_int_reg <= cq_strb_eop_int_next;
-    cq_sop_int_reg <= cq_sop_int_next;
-    cq_eop_int_reg <= cq_eop_int_next;
+    cq_sop_int_reg      <= cq_sop_int_next;
+    cq_eop_int_reg      <= cq_eop_int_next;
 
     if (rst) begin
         rx_req_tlp_valid_reg <= 0;
