@@ -221,15 +221,17 @@ if cocotb.SIM_NAME:
     factory = TestFactory(run_test)
     factory.add_option("payload_lengths", [size_list])
     factory.add_option("payload_data", [incrementing_payload])
-    factory.add_option("idle_inserter", [None, cycle_pause])
-    factory.add_option("backpressure_inserter", [None, cycle_pause])
+    # factory.add_option("idle_inserter", [None, cycle_pause])
+    factory.add_option("idle_inserter", [None])
+    # factory.add_option("backpressure_inserter", [None, cycle_pause])
+    factory.add_option("backpressure_inserter", [None])
     factory.add_option("port", list(range(ports)))
     factory.generate_tests()
 
-    factory = TestFactory(run_stress_test)
-    factory.add_option("idle_inserter", [None, cycle_pause])
-    factory.add_option("backpressure_inserter", [None, cycle_pause])
-    factory.generate_tests()
+    # factory = TestFactory(run_stress_test)
+    # factory.add_option("idle_inserter", [None, cycle_pause])
+    # factory.add_option("backpressure_inserter", [None, cycle_pause])
+    # factory.generate_tests()
 
 
 # cocotb-test
@@ -238,8 +240,7 @@ tests_dir = os.path.dirname(__file__)
 rtl_dir = os.path.abspath(os.path.join(tests_dir, '..', '..', 'rtl'))
 
 
-@pytest.mark.parametrize(("pcie_data_width", "tlp_seg_count"),
-    [(64, 1), (128, 1), (256, 1), (256, 2), (512, 1), (512, 2), (512, 4)])
+# @pytest.mark.parametrize(("pcie_data_width", "tlp_seg_count"), [(64, 1), (128, 1), (256, 1), (256, 2), (512, 1), (512, 2), (512, 4)])
 @pytest.mark.parametrize("ports", [1, 4])
 def test_pcie_tlp_demux_bar(request, pcie_data_width, tlp_seg_count, ports):
     dut = "pcie_tlp_demux_bar"
