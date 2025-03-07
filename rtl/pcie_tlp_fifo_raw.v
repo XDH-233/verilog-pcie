@@ -430,51 +430,101 @@ module pcie_tlp_fifo_raw #(
     reg     [  SEG_SEL_WIDTH-1:0] cur_seg;
     reg     [  SEG_SEL_WIDTH-1:0] eop_seg;
 
+
+
+    generate
+        if(OUT_TLP_SEG_COUNT > 1) begin
+            always @(*) begin
+                // pack segments
+                seg_mem_wr_valid = 0;
+                seg_mem_wr_sel = 0;
+                cur_seg = wr_ptr_cur_reg[SEG_SEL_WIDTH-1:0];
+                eop_seg = 0;
+                seg_count = 0;
+                for (seg = 0; seg < OUT_TLP_SEG_COUNT; seg = seg + 1) begin
+                    if (int_tlp_valid[seg]) begin
+                        seg_mem_wr_valid[cur_seg+:1] = 1'b1;
+                        seg_mem_wr_sel[cur_seg*SEG_SEL_WIDTH+:SEG_SEL_WIDTH] = seg;  // FXIME: verilator ../V3Width.cpp:6391: Node VARREF 'seg' has no expected width?? Missing Visitor func?
+                        cur_seg = cur_seg + 1;
+                        if (int_tlp_eop[seg]) begin
+                            eop_seg = seg_count;
+                        end
+                        seg_count = seg_count + 1;
+                    end
+                end
+
+                for (seg = 0; seg < OUT_TLP_SEG_COUNT; seg = seg + 1) begin
+                    seg_mem_wr_data[seg*OUT_TLP_SEG_DATA_WIDTH+:OUT_TLP_SEG_DATA_WIDTH] = int_tlp_data[seg_mem_wr_sel[seg*SEG_SEL_WIDTH+:SEG_SEL_WIDTH]*OUT_TLP_SEG_DATA_WIDTH+:OUT_TLP_SEG_DATA_WIDTH];
+                    seg_mem_wr_strb[seg*OUT_TLP_SEG_STRB_WIDTH+:OUT_TLP_SEG_STRB_WIDTH] = int_tlp_strb[seg_mem_wr_sel[seg*SEG_SEL_WIDTH+:SEG_SEL_WIDTH]*OUT_TLP_SEG_STRB_WIDTH+:OUT_TLP_SEG_STRB_WIDTH];
+                    seg_mem_wr_hdr[seg*TLP_HDR_WIDTH+:TLP_HDR_WIDTH] = int_tlp_hdr[seg_mem_wr_sel[seg*SEG_SEL_WIDTH+:SEG_SEL_WIDTH]*TLP_HDR_WIDTH+:TLP_HDR_WIDTH];
+                    seg_mem_wr_seq[seg*SEQ_NUM_WIDTH+:SEQ_NUM_WIDTH] = int_tlp_seq[seg_mem_wr_sel[seg*SEG_SEL_WIDTH+:SEG_SEL_WIDTH]*SEQ_NUM_WIDTH+:SEQ_NUM_WIDTH];
+                    seg_mem_wr_bar_id[seg*3+:3] = int_tlp_bar_id[seg_mem_wr_sel[seg*SEG_SEL_WIDTH+:SEG_SEL_WIDTH]*3+:3];
+                    seg_mem_wr_func_num[seg*8+:8] = int_tlp_func_num[seg_mem_wr_sel[seg*SEG_SEL_WIDTH+:SEG_SEL_WIDTH]*8+:8];
+                    seg_mem_wr_error[seg*4+:4] = int_tlp_error[seg_mem_wr_sel[seg*SEG_SEL_WIDTH+:SEG_SEL_WIDTH]*4+:4];
+                    seg_mem_wr_sop[seg+:1] = int_tlp_sop[seg_mem_wr_sel[seg*SEG_SEL_WIDTH+:SEG_SEL_WIDTH]+:1];
+                    seg_mem_wr_eop[seg+:1] = int_tlp_eop[seg_mem_wr_sel[seg*SEG_SEL_WIDTH+:SEG_SEL_WIDTH]+:1];
+                end
+            end
+        end else begin
+            always @(*) begin
+                seg_mem_wr_data = in_tlp_data;
+                seg_mem_wr_strb = in_tlp_strb;
+                seg_mem_wr_hdr = in_tlp_hdr;
+                seg_mem_wr_seq = in_tlp_seq;
+                seg_mem_wr_bar_id = in_tlp_bar_id;
+                seg_mem_wr_func_num = in_tlp_func_num;
+                seg_mem_wr_error = in_tlp_error;
+                seg_mem_wr_sop = in_tlp_sop;
+                seg_mem_wr_eop = in_tlp_eop;
+            end
+        end
+    endgenerate
+
     always @* begin
         wr_ptr_next = wr_ptr_reg;
         wr_ptr_cur_next = wr_ptr_cur_reg;
 
-        if (OUT_TLP_SEG_COUNT > 1) begin
-            // pack segments
-            seg_mem_wr_valid = 0;
-            seg_mem_wr_sel = 0;
-            cur_seg = wr_ptr_cur_reg[SEG_SEL_WIDTH-1:0];
-            eop_seg = 0;
-            seg_count = 0;
-            for (seg = 0; seg < OUT_TLP_SEG_COUNT; seg = seg + 1) begin
-                if (int_tlp_valid[seg]) begin
-                    seg_mem_wr_valid[cur_seg+:1] = 1'b1;
-                    seg_mem_wr_sel[cur_seg*SEG_SEL_WIDTH+:SEG_SEL_WIDTH] = seg;  // FXIME: verilator ../V3Width.cpp:6391: Node VARREF 'seg' has no expected width?? Missing Visitor func?
-                    cur_seg = cur_seg + 1;
-                    if (int_tlp_eop[seg]) begin
-                        eop_seg = seg_count;
-                    end
-                    seg_count = seg_count + 1;
-                end
-            end
+        // if (OUT_TLP_SEG_COUNT > 1) begin
+        //      //pack segments
+        //     seg_mem_wr_valid = 0;
+        //     seg_mem_wr_sel = 0;
+        //     cur_seg = wr_ptr_cur_reg[SEG_SEL_WIDTH-1:0];
+        //     eop_seg = 0;
+        //     seg_count = 0;
+        //     for (seg = 0; seg < OUT_TLP_SEG_COUNT; seg = seg + 1) begin
+        //         if (int_tlp_valid[seg]) begin
+        //             seg_mem_wr_valid[cur_seg+:1] = 1'b1;
+        //             seg_mem_wr_sel[cur_seg*SEG_SEL_WIDTH+:SEG_SEL_WIDTH] = seg;  // FXIME: verilator ../V3Width.cpp:6391: Node VARREF 'seg' has no expected width?? Missing Visitor func?
+        //             cur_seg = cur_seg + 1;
+        //             if (int_tlp_eop[seg]) begin
+        //                 eop_seg = seg_count;
+        //             end
+        //             seg_count = seg_count + 1;
+        //         end
+        //     end
 
-            for (seg = 0; seg < OUT_TLP_SEG_COUNT; seg = seg + 1) begin
-                seg_mem_wr_data[seg*OUT_TLP_SEG_DATA_WIDTH+:OUT_TLP_SEG_DATA_WIDTH] = int_tlp_data[seg_mem_wr_sel[seg*SEG_SEL_WIDTH+:SEG_SEL_WIDTH]*OUT_TLP_SEG_DATA_WIDTH+:OUT_TLP_SEG_DATA_WIDTH];
-                seg_mem_wr_strb[seg*OUT_TLP_SEG_STRB_WIDTH+:OUT_TLP_SEG_STRB_WIDTH] = int_tlp_strb[seg_mem_wr_sel[seg*SEG_SEL_WIDTH+:SEG_SEL_WIDTH]*OUT_TLP_SEG_STRB_WIDTH+:OUT_TLP_SEG_STRB_WIDTH];
-                seg_mem_wr_hdr[seg*TLP_HDR_WIDTH+:TLP_HDR_WIDTH] = int_tlp_hdr[seg_mem_wr_sel[seg*SEG_SEL_WIDTH+:SEG_SEL_WIDTH]*TLP_HDR_WIDTH+:TLP_HDR_WIDTH];
-                seg_mem_wr_seq[seg*SEQ_NUM_WIDTH+:SEQ_NUM_WIDTH] = int_tlp_seq[seg_mem_wr_sel[seg*SEG_SEL_WIDTH+:SEG_SEL_WIDTH]*SEQ_NUM_WIDTH+:SEQ_NUM_WIDTH];
-                seg_mem_wr_bar_id[seg*3+:3] = int_tlp_bar_id[seg_mem_wr_sel[seg*SEG_SEL_WIDTH+:SEG_SEL_WIDTH]*3+:3];
-                seg_mem_wr_func_num[seg*8+:8] = int_tlp_func_num[seg_mem_wr_sel[seg*SEG_SEL_WIDTH+:SEG_SEL_WIDTH]*8+:8];
-                seg_mem_wr_error[seg*4+:4] = int_tlp_error[seg_mem_wr_sel[seg*SEG_SEL_WIDTH+:SEG_SEL_WIDTH]*4+:4];
-                seg_mem_wr_sop[seg+:1] = int_tlp_sop[seg_mem_wr_sel[seg*SEG_SEL_WIDTH+:SEG_SEL_WIDTH]+:1];
-                seg_mem_wr_eop[seg+:1] = int_tlp_eop[seg_mem_wr_sel[seg*SEG_SEL_WIDTH+:SEG_SEL_WIDTH]+:1];
-            end
-        end else begin
-            seg_mem_wr_data = in_tlp_data;
-            seg_mem_wr_strb = in_tlp_strb;
-            seg_mem_wr_hdr = in_tlp_hdr;
-            seg_mem_wr_seq = in_tlp_seq;
-            seg_mem_wr_bar_id = in_tlp_bar_id;
-            seg_mem_wr_func_num = in_tlp_func_num;
-            seg_mem_wr_error = in_tlp_error;
-            seg_mem_wr_sop = in_tlp_sop;
-            seg_mem_wr_eop = in_tlp_eop;
-        end
+        //     for (seg = 0; seg < OUT_TLP_SEG_COUNT; seg = seg + 1) begin
+        //         seg_mem_wr_data[seg*OUT_TLP_SEG_DATA_WIDTH+:OUT_TLP_SEG_DATA_WIDTH] = int_tlp_data[seg_mem_wr_sel[seg*SEG_SEL_WIDTH+:SEG_SEL_WIDTH]*OUT_TLP_SEG_DATA_WIDTH+:OUT_TLP_SEG_DATA_WIDTH];
+        //         seg_mem_wr_strb[seg*OUT_TLP_SEG_STRB_WIDTH+:OUT_TLP_SEG_STRB_WIDTH] = int_tlp_strb[seg_mem_wr_sel[seg*SEG_SEL_WIDTH+:SEG_SEL_WIDTH]*OUT_TLP_SEG_STRB_WIDTH+:OUT_TLP_SEG_STRB_WIDTH];
+        //         seg_mem_wr_hdr[seg*TLP_HDR_WIDTH+:TLP_HDR_WIDTH] = int_tlp_hdr[seg_mem_wr_sel[seg*SEG_SEL_WIDTH+:SEG_SEL_WIDTH]*TLP_HDR_WIDTH+:TLP_HDR_WIDTH];
+        //         seg_mem_wr_seq[seg*SEQ_NUM_WIDTH+:SEQ_NUM_WIDTH] = int_tlp_seq[seg_mem_wr_sel[seg*SEG_SEL_WIDTH+:SEG_SEL_WIDTH]*SEQ_NUM_WIDTH+:SEQ_NUM_WIDTH];
+        //         seg_mem_wr_bar_id[seg*3+:3] = int_tlp_bar_id[seg_mem_wr_sel[seg*SEG_SEL_WIDTH+:SEG_SEL_WIDTH]*3+:3];
+        //         seg_mem_wr_func_num[seg*8+:8] = int_tlp_func_num[seg_mem_wr_sel[seg*SEG_SEL_WIDTH+:SEG_SEL_WIDTH]*8+:8];
+        //         seg_mem_wr_error[seg*4+:4] = int_tlp_error[seg_mem_wr_sel[seg*SEG_SEL_WIDTH+:SEG_SEL_WIDTH]*4+:4];
+        //         seg_mem_wr_sop[seg+:1] = int_tlp_sop[seg_mem_wr_sel[seg*SEG_SEL_WIDTH+:SEG_SEL_WIDTH]+:1];
+        //         seg_mem_wr_eop[seg+:1] = int_tlp_eop[seg_mem_wr_sel[seg*SEG_SEL_WIDTH+:SEG_SEL_WIDTH]+:1];
+        //     end
+        // end else begin
+        //     seg_mem_wr_data = in_tlp_data;
+        //     seg_mem_wr_strb = in_tlp_strb;
+        //     seg_mem_wr_hdr = in_tlp_hdr;
+        //     seg_mem_wr_seq = in_tlp_seq;
+        //     seg_mem_wr_bar_id = in_tlp_bar_id;
+        //     seg_mem_wr_func_num = in_tlp_func_num;
+        //     seg_mem_wr_error = in_tlp_error;
+        //     seg_mem_wr_sop = in_tlp_sop;
+        //     seg_mem_wr_eop = in_tlp_eop;
+        // end
 
         seg_mem_wr_addr_next = seg_mem_wr_addr_reg;
         seg_mem_wr_en = 0;
