@@ -26,6 +26,8 @@ else
 	SIM ?= verilator
 endif
 
+PWD = $(shell pwd)
+
 WAVES ?= 1
 
 COCOTB_HDL_TIMEUNIT = 1ns
@@ -34,23 +36,23 @@ COCOTB_HDL_TIMEPRECISION = 1ps
 DUT      = example_core_pcie
 TOPLEVEL = $(DUT)
 MODULE   = test_$(DUT)
-VERILOG_SOURCES += ../../rtl/$(DUT).v
-VERILOG_SOURCES += ../../rtl/example_core.v
-VERILOG_SOURCES += ../../rtl/axi_ram.v
-VERILOG_SOURCES += ../../../../rtl/pcie_axil_master.v
-VERILOG_SOURCES += ../../../../rtl/pcie_axi_master.v
-VERILOG_SOURCES += ../../../../rtl/pcie_axi_master_rd.v
-VERILOG_SOURCES += ../../../../rtl/pcie_axi_master_wr.v
-VERILOG_SOURCES += ../../../../rtl/pcie_tlp_demux_bar.v
-VERILOG_SOURCES += ../../../../rtl/pcie_tlp_demux.v
-VERILOG_SOURCES += ../../../../rtl/pcie_tlp_mux.v
-VERILOG_SOURCES += ../../../../rtl/pcie_msix.v
-VERILOG_SOURCES += ../../../../rtl/dma_if_pcie.v
-VERILOG_SOURCES += ../../../../rtl/dma_if_pcie_rd.v
-VERILOG_SOURCES += ../../../../rtl/dma_if_pcie_wr.v
-VERILOG_SOURCES += ../../../../rtl/dma_psdpram.v
-VERILOG_SOURCES += ../../../../rtl/priority_encoder.v
-VERILOG_SOURCES += ../../../../rtl/pulse_merge.v
+VERILOG_SOURCES += $(PWD)/../../rtl/$(DUT).v
+VERILOG_SOURCES += $(PWD)/../../rtl/example_core.v
+VERILOG_SOURCES += $(PWD)/../../rtl/axi_ram.v
+VERILOG_SOURCES += $(PWD)/../../../../rtl/pcie_axil_master.v
+VERILOG_SOURCES += $(PWD)/../../../../rtl/pcie_axi_master.v
+VERILOG_SOURCES += $(PWD)/../../../../rtl/pcie_axi_master_rd.v
+VERILOG_SOURCES += $(PWD)/../../../../rtl/pcie_axi_master_wr.v
+VERILOG_SOURCES += $(PWD)/../../../../rtl/pcie_tlp_demux_bar.v
+VERILOG_SOURCES += $(PWD)/../../../../rtl/pcie_tlp_demux.v
+VERILOG_SOURCES += $(PWD)/../../../../rtl/pcie_tlp_mux.v
+VERILOG_SOURCES += $(PWD)/../../../../rtl/pcie_msix.v
+VERILOG_SOURCES += $(PWD)/../../../../rtl/dma_if_pcie.v
+VERILOG_SOURCES += $(PWD)/../../../../rtl/dma_if_pcie_rd.v
+VERILOG_SOURCES += $(PWD)/../../../../rtl/dma_if_pcie_wr.v
+VERILOG_SOURCES += $(PWD)/../../../../rtl/dma_psdpram.v
+VERILOG_SOURCES += $(PWD)/../../../../rtl/priority_encoder.v
+VERILOG_SOURCES += $(PWD)/../../../../rtl/pulse_merge.v
 
 # module parameters
 # export PARAM_TLP_DATA_WIDTH := 512
@@ -75,7 +77,25 @@ VERILOG_SOURCES += ../../../../rtl/pulse_merge.v
 # export PARAM_BAR2_APERTURE := 24
 # export PARAM_BAR4_APERTURE := 16
 
-ifeq ($(SIM), icarus)
+ifeq ($(SIM), vcs)
+	COMPILE_ARGS = +v2k \
+		-full64 \
+		-fsdb \
+		+vcs+fsdbon \
+		-sverilog \
+		-debug_acc+all -debug_region+cell+encrypt \
+		-LDFLAGS -Wl,--no-as-needed \
+		-timescale=1ns/1ps \
+		-debug_access+r+w+nomemcbk -debug_region+cell \
+		+vpi \
+		+lint=PCWM \
+		-kdb \
+		-lca \
+		-l build.log \
+		+lint=TFIPC-L \
+		+error+10000
+
+else ifeq ($(SIM), icarus)
 	PLUSARGS += -fst
 
 	COMPILE_ARGS += $(foreach v,$(filter PARAM_%,$(.VARIABLES)),-P $(TOPLEVEL).$(subst PARAM_,,$(v))=$($(v)))

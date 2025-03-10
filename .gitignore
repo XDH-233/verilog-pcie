@@ -16,3 +16,4 @@ iverilog_dump.v
 .DS_*
 ucli.key
 
+*.rc
