@@ -26,7 +26,6 @@ else
 	SIM ?= verilator
 endif
 
-SIM ?= icarus
 WAVES ?= 1
 
 COCOTB_HDL_TIMEUNIT = 1ns

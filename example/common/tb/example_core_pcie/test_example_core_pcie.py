@@ -36,6 +36,8 @@ from cocotb.triggers import RisingEdge, Timer
 
 from cocotbext.pcie.core import RootComplex
 
+from cocotbext.axi import AxiLiteBus, AxiLiteRam
+
 try:
     from pcie_if import PcieIfDevice, PcieIfRxBus, PcieIfTxBus
 except ImportError:
@@ -55,6 +57,10 @@ class TB(object):
         self.log.setLevel(logging.DEBUG)
 
         cocotb.start_soon(Clock(dut.clk, 4, units="ns").start())
+
+        # axil monitors and ram model
+        self.axil_ctrl_ram = AxiLiteRam(AxiLiteBus.from_prefix(dut, "axil_ctrl"), dut.clk, dut.rst, size=2**24)
+        self.axil_msix_ram = AxiLiteRam(AxiLiteBus.from_prefix(dut, "axil_msix"), dut.clk, dut.rst, size=2**16)
 
         # PCIe
         self.rc = RootComplex()
@@ -182,211 +188,211 @@ async def run_test(dut):
     dev = tb.rc.find_device(tb.dev.functions[0].pcie_id)
     await dev.enable_device()
     await dev.set_master()
-    await dev.alloc_irq_vectors(32, 32) # 分配中断向量？
+    await dev.alloc_irq_vectors(32, 32)
 
-    # dev_pf0_bar0 = dev.bar_window[0]
-    # dev_pf0_bar2 = dev.bar_window[2]
+    dev_pf0_bar0 = dev.bar_window[0]
+    dev_pf0_bar2 = dev.bar_window[2]
 
-    # tb.dut.bus_num.value = tb.dev.bus_num
-    # tb.dut.msix_enable.value = tb.dev.functions[0].msix_cap.msix_enable
-    # tb.dut.msix_mask.value = tb.dev.functions[0].msix_cap.msix_function_mask
+    tb.dut.bus_num.value = tb.dev.bus_num
+    tb.dut.msix_enable.value = tb.dev.functions[0].msix_cap.msix_enable
+    tb.dut.msix_mask.value = tb.dev.functions[0].msix_cap.msix_function_mask
 
-    # tb.log.info("Test memory write to BAR 2")
+    tb.log.info("Test memory write to BAR 2")
 
-    # test_data = b'\x11\x22\x33\x44'
-    # await dev_pf0_bar2.write(0, test_data)
+    test_data = b'\x11\x22\x33\x44'
+    await dev_pf0_bar2.write(0, test_data)
 
     await Timer(100, 'ns')
 
-    # tb.log.info("Test memory read from BAR 2")
+    tb.log.info("Test memory read from BAR 2")
 
-    # val = await dev_pf0_bar2.read(0, len(test_data), timeout=1000)
-    # tb.log.info("Read data: %s", val)
-    # assert val == test_data
+    val = await dev_pf0_bar2.read(0, len(test_data), timeout=1000)
+    tb.log.info("Read data: %s", val)
+    assert val == test_data
 
-    # tb.log.info("Test DMA")
+    tb.log.info("Test DMA")
 
-    # # write packet data
-    # mem[0:1024] = bytearray([x % 256 for x in range(1024)])
+    # write packet data
+    mem[0:1024] = bytearray([x % 256 for x in range(1024)])
 
-    # # enable DMA
-    # await dev_pf0_bar0.write_dword(0x000000, 1)
-    # # enable interrupts
-    # await dev_pf0_bar0.write_dword(0x000008, 0x3)
+    # enable DMA
+    await dev_pf0_bar0.write_dword(0x000000, 1)
+    # enable interrupts
+    await dev_pf0_bar0.write_dword(0x000008, 0x3)
 
-    # # write pcie read descriptor
-    # await dev_pf0_bar0.write_dword(0x000100, (mem_base+0x0000) & 0xffffffff)
-    # await dev_pf0_bar0.write_dword(0x000104, (mem_base+0x0000 >> 32) & 0xffffffff)
-    # await dev_pf0_bar0.write_dword(0x000108, 0x100)
-    # await dev_pf0_bar0.write_dword(0x000110, 0x400)
-    # await dev_pf0_bar0.write_dword(0x000114, 0xAA)
+    # write pcie read descriptor
+    await dev_pf0_bar0.write_dword(0x000100, (mem_base+0x0000) & 0xffffffff)
+    await dev_pf0_bar0.write_dword(0x000104, (mem_base+0x0000 >> 32) & 0xffffffff)
+    await dev_pf0_bar0.write_dword(0x000108, 0x100)
+    await dev_pf0_bar0.write_dword(0x000110, 0x400)
+    await dev_pf0_bar0.write_dword(0x000114, 0xAA)
 
-    # await Timer(2000, 'ns')
+    await Timer(2000, 'ns')
 
-    # # read status
-    # status = await dev_pf0_bar0.read_dword(0x000000)
-    # tb.log.info("DMA Status: 0x%x", status)
-    # val = await dev_pf0_bar0.read_dword(0x000118)
-    # tb.log.info("Status: 0x%x", val)
-    # assert val == 0x800000AA
+    # read status
+    status = await dev_pf0_bar0.read_dword(0x000000)
+    tb.log.info("DMA Status: 0x%x", status)
+    val = await dev_pf0_bar0.read_dword(0x000118)
+    tb.log.info("Status: 0x%x", val)
+    assert val == 0x800000AA
 
-    # # write pcie write descriptor
-    # await dev_pf0_bar0.write_dword(0x000200, (mem_base+0x1000) & 0xffffffff)
-    # await dev_pf0_bar0.write_dword(0x000204, (mem_base+0x1000 >> 32) & 0xffffffff)
-    # await dev_pf0_bar0.write_dword(0x000208, 0x100)
-    # await dev_pf0_bar0.write_dword(0x000210, 0x400)
-    # await dev_pf0_bar0.write_dword(0x000214, 0x55)
+    # write pcie write descriptor
+    await dev_pf0_bar0.write_dword(0x000200, (mem_base+0x1000) & 0xffffffff)
+    await dev_pf0_bar0.write_dword(0x000204, (mem_base+0x1000 >> 32) & 0xffffffff)
+    await dev_pf0_bar0.write_dword(0x000208, 0x100)
+    await dev_pf0_bar0.write_dword(0x000210, 0x400)
+    await dev_pf0_bar0.write_dword(0x000214, 0x55)
 
-    # await Timer(2000, 'ns')
+    await Timer(2000, 'ns')
 
-    # # read status
-    # status = await dev_pf0_bar0.read_dword(0x000000)
-    # tb.log.info("DMA Status: 0x%x", status)
-    # val = await dev_pf0_bar0.read_dword(0x000218)
-    # tb.log.info("Status: 0x%x", val)
-    # assert val == 0x80000055
+    # read status
+    status = await dev_pf0_bar0.read_dword(0x000000)
+    tb.log.info("DMA Status: 0x%x", status)
+    val = await dev_pf0_bar0.read_dword(0x000218)
+    tb.log.info("Status: 0x%x", val)
+    assert val == 0x80000055
 
-    # tb.log.info("%s", mem.hexdump_str(0x1000, 64))
+    tb.log.info("%s", mem.hexdump_str(0x1000, 64))
 
-    # assert mem[0:1024] == mem[0x1000:0x1000+1024]
+    assert mem[0:1024] == mem[0x1000:0x1000+1024]
 
-    # tb.log.info("Test immediate write")
+    tb.log.info("Test immediate write")
 
-    # # write pcie write descriptor
-    # await dev_pf0_bar0.write_dword(0x000200, (mem_base+0x1000) & 0xffffffff)
-    # await dev_pf0_bar0.write_dword(0x000204, (mem_base+0x1000 >> 32) & 0xffffffff)
-    # await dev_pf0_bar0.write_dword(0x000208, 0x44332211)
-    # await dev_pf0_bar0.write_dword(0x000210, 0x4)
-    # await dev_pf0_bar0.write_dword(0x000214, 0x800000AA)
+    # write pcie write descriptor
+    await dev_pf0_bar0.write_dword(0x000200, (mem_base+0x1000) & 0xffffffff)
+    await dev_pf0_bar0.write_dword(0x000204, (mem_base+0x1000 >> 32) & 0xffffffff)
+    await dev_pf0_bar0.write_dword(0x000208, 0x44332211)
+    await dev_pf0_bar0.write_dword(0x000210, 0x4)
+    await dev_pf0_bar0.write_dword(0x000214, 0x800000AA)
 
-    # await Timer(2000, 'ns')
+    await Timer(2000, 'ns')
 
-    # # read status
-    # status = await dev_pf0_bar0.read_dword(0x000000)
-    # tb.log.info("DMA Status: 0x%x", status)
-    # val = await dev_pf0_bar0.read_dword(0x000218)
-    # tb.log.info("Status: 0x%x", val)
-    # assert val == 0x800000AA
+    # read status
+    status = await dev_pf0_bar0.read_dword(0x000000)
+    tb.log.info("DMA Status: 0x%x", status)
+    val = await dev_pf0_bar0.read_dword(0x000218)
+    tb.log.info("Status: 0x%x", val)
+    assert val == 0x800000AA
 
-    # tb.log.info("%s", mem.hexdump_str(0x1000, 64))
+    tb.log.info("%s", mem.hexdump_str(0x1000, 64))
 
-    # assert mem[0x1000:0x1000+4] == b'\x11\x22\x33\x44'
+    assert mem[0x1000:0x1000+4] == b'\x11\x22\x33\x44'
 
-    # tb.log.info("Test DMA block operations")
+    tb.log.info("Test DMA block operations")
 
-    # region_len = 0x2000
-    # src_offset = 0x0000
-    # dest_offset = 0x4000
+    region_len = 0x2000
+    src_offset = 0x0000
+    dest_offset = 0x4000
 
-    # block_size = 256
-    # block_stride = block_size
-    # block_count = 32
+    block_size = 256
+    block_stride = block_size
+    block_count = 32
 
-    # # write packet data
-    # mem[src_offset:src_offset+region_len] = bytearray([x % 256 for x in range(region_len)])
+    # write packet data
+    mem[src_offset:src_offset+region_len] = bytearray([x % 256 for x in range(region_len)])
 
-    # # enable DMA
-    # await dev_pf0_bar0.write_dword(0x000000, 1)
-    # # disable interrupts
-    # await dev_pf0_bar0.write_dword(0x000008, 0)
+    # enable DMA
+    await dev_pf0_bar0.write_dword(0x000000, 1)
+    # disable interrupts
+    await dev_pf0_bar0.write_dword(0x000008, 0)
 
-    # # configure operation (read)
-    # # DMA base address
-    # await dev_pf0_bar0.write_dword(0x001080, (mem_base+src_offset) & 0xffffffff)
-    # await dev_pf0_bar0.write_dword(0x001084, (mem_base+src_offset >> 32) & 0xffffffff)
-    # # DMA offset address
-    # await dev_pf0_bar0.write_dword(0x001088, 0)
-    # await dev_pf0_bar0.write_dword(0x00108c, 0)
-    # # DMA offset mask
-    # await dev_pf0_bar0.write_dword(0x001090, region_len-1)
-    # await dev_pf0_bar0.write_dword(0x001094, 0)
-    # # DMA stride
-    # await dev_pf0_bar0.write_dword(0x001098, block_stride)
-    # await dev_pf0_bar0.write_dword(0x00109c, 0)
-    # # RAM base address
-    # await dev_pf0_bar0.write_dword(0x0010c0, 0)
-    # await dev_pf0_bar0.write_dword(0x0010c4, 0)
-    # # RAM offset address
-    # await dev_pf0_bar0.write_dword(0x0010c8, 0)
-    # await dev_pf0_bar0.write_dword(0x0010cc, 0)
-    # # RAM offset mask
-    # await dev_pf0_bar0.write_dword(0x0010d0, region_len-1)
-    # await dev_pf0_bar0.write_dword(0x0010d4, 0)
-    # # RAM stride
-    # await dev_pf0_bar0.write_dword(0x0010d8, block_stride)
-    # await dev_pf0_bar0.write_dword(0x0010dc, 0)
-    # # clear cycle count
-    # await dev_pf0_bar0.write_dword(0x001008, 0)
-    # await dev_pf0_bar0.write_dword(0x00100c, 0)
-    # # block length
-    # await dev_pf0_bar0.write_dword(0x001010, block_size)
-    # # block count
-    # await dev_pf0_bar0.write_dword(0x001018, block_count)
-    # await dev_pf0_bar0.write_dword(0x00101c, 0)
-    # # start
-    # await dev_pf0_bar0.write_dword(0x001000, 1)
+    # configure operation (read)
+    # DMA base address
+    await dev_pf0_bar0.write_dword(0x001080, (mem_base+src_offset) & 0xffffffff)
+    await dev_pf0_bar0.write_dword(0x001084, (mem_base+src_offset >> 32) & 0xffffffff)
+    # DMA offset address
+    await dev_pf0_bar0.write_dword(0x001088, 0)
+    await dev_pf0_bar0.write_dword(0x00108c, 0)
+    # DMA offset mask
+    await dev_pf0_bar0.write_dword(0x001090, region_len-1)
+    await dev_pf0_bar0.write_dword(0x001094, 0)
+    # DMA stride
+    await dev_pf0_bar0.write_dword(0x001098, block_stride)
+    await dev_pf0_bar0.write_dword(0x00109c, 0)
+    # RAM base address
+    await dev_pf0_bar0.write_dword(0x0010c0, 0)
+    await dev_pf0_bar0.write_dword(0x0010c4, 0)
+    # RAM offset address
+    await dev_pf0_bar0.write_dword(0x0010c8, 0)
+    await dev_pf0_bar0.write_dword(0x0010cc, 0)
+    # RAM offset mask
+    await dev_pf0_bar0.write_dword(0x0010d0, region_len-1)
+    await dev_pf0_bar0.write_dword(0x0010d4, 0)
+    # RAM stride
+    await dev_pf0_bar0.write_dword(0x0010d8, block_stride)
+    await dev_pf0_bar0.write_dword(0x0010dc, 0)
+    # clear cycle count
+    await dev_pf0_bar0.write_dword(0x001008, 0)
+    await dev_pf0_bar0.write_dword(0x00100c, 0)
+    # block length
+    await dev_pf0_bar0.write_dword(0x001010, block_size)
+    # block count
+    await dev_pf0_bar0.write_dword(0x001018, block_count)
+    await dev_pf0_bar0.write_dword(0x00101c, 0)
+    # start
+    await dev_pf0_bar0.write_dword(0x001000, 1)
 
-    # for k in range(10):
-    #     await Timer(1000, 'ns')
-    #     run = await dev_pf0_bar0.read_dword(0x001000)
-    #     if run == 0:
-    #         break
+    for k in range(10):
+        await Timer(1000, 'ns')
+        run = await dev_pf0_bar0.read_dword(0x001000)
+        if run == 0:
+            break
 
-    # # read status
-    # status = await dev_pf0_bar0.read_dword(0x000000)
-    # tb.log.info("DMA Status: 0x%x", status)
+    # read status
+    status = await dev_pf0_bar0.read_dword(0x000000)
+    tb.log.info("DMA Status: 0x%x", status)
 
-    # # configure operation (write)
-    # # DMA base address
-    # await dev_pf0_bar0.write_dword(0x001180, (mem_base+dest_offset) & 0xffffffff)
-    # await dev_pf0_bar0.write_dword(0x001184, (mem_base+dest_offset >> 32) & 0xffffffff)
-    # # DMA offset address
-    # await dev_pf0_bar0.write_dword(0x001188, 0)
-    # await dev_pf0_bar0.write_dword(0x00118c, 0)
-    # # DMA offset mask
-    # await dev_pf0_bar0.write_dword(0x001190, region_len-1)
-    # await dev_pf0_bar0.write_dword(0x001194, 0)
-    # # DMA stride
-    # await dev_pf0_bar0.write_dword(0x001198, block_stride)
-    # await dev_pf0_bar0.write_dword(0x00119c, 0)
-    # # RAM base address
-    # await dev_pf0_bar0.write_dword(0x0011c0, 0)
-    # await dev_pf0_bar0.write_dword(0x0011c4, 0)
-    # # RAM offset address
-    # await dev_pf0_bar0.write_dword(0x0011c8, 0)
-    # await dev_pf0_bar0.write_dword(0x0011cc, 0)
-    # # RAM offset mask
-    # await dev_pf0_bar0.write_dword(0x0011d0, region_len-1)
-    # await dev_pf0_bar0.write_dword(0x0011d4, 0)
-    # # RAM stride
-    # await dev_pf0_bar0.write_dword(0x0011d8, block_stride)
-    # await dev_pf0_bar0.write_dword(0x0011dc, 0)
-    # # clear cycle count
-    # await dev_pf0_bar0.write_dword(0x001108, 0)
-    # await dev_pf0_bar0.write_dword(0x00110c, 0)
-    # # block length
-    # await dev_pf0_bar0.write_dword(0x001110, block_size)
-    # # block count
-    # await dev_pf0_bar0.write_dword(0x001118, block_count)
-    # await dev_pf0_bar0.write_dword(0x00111c, 0)
-    # # start
-    # await dev_pf0_bar0.write_dword(0x001100, 1)
+    # configure operation (write)
+    # DMA base address
+    await dev_pf0_bar0.write_dword(0x001180, (mem_base+dest_offset) & 0xffffffff)
+    await dev_pf0_bar0.write_dword(0x001184, (mem_base+dest_offset >> 32) & 0xffffffff)
+    # DMA offset address
+    await dev_pf0_bar0.write_dword(0x001188, 0)
+    await dev_pf0_bar0.write_dword(0x00118c, 0)
+    # DMA offset mask
+    await dev_pf0_bar0.write_dword(0x001190, region_len-1)
+    await dev_pf0_bar0.write_dword(0x001194, 0)
+    # DMA stride
+    await dev_pf0_bar0.write_dword(0x001198, block_stride)
+    await dev_pf0_bar0.write_dword(0x00119c, 0)
+    # RAM base address
+    await dev_pf0_bar0.write_dword(0x0011c0, 0)
+    await dev_pf0_bar0.write_dword(0x0011c4, 0)
+    # RAM offset address
+    await dev_pf0_bar0.write_dword(0x0011c8, 0)
+    await dev_pf0_bar0.write_dword(0x0011cc, 0)
+    # RAM offset mask
+    await dev_pf0_bar0.write_dword(0x0011d0, region_len-1)
+    await dev_pf0_bar0.write_dword(0x0011d4, 0)
+    # RAM stride
+    await dev_pf0_bar0.write_dword(0x0011d8, block_stride)
+    await dev_pf0_bar0.write_dword(0x0011dc, 0)
+    # clear cycle count
+    await dev_pf0_bar0.write_dword(0x001108, 0)
+    await dev_pf0_bar0.write_dword(0x00110c, 0)
+    # block length
+    await dev_pf0_bar0.write_dword(0x001110, block_size)
+    # block count
+    await dev_pf0_bar0.write_dword(0x001118, block_count)
+    await dev_pf0_bar0.write_dword(0x00111c, 0)
+    # start
+    await dev_pf0_bar0.write_dword(0x001100, 1)
 
-    # for k in range(10):
-    #     await Timer(1000, 'ns')
-    #     run = await dev_pf0_bar0.read_dword(0x001100)
-    #     if run == 0:
-    #         break
+    for k in range(10):
+        await Timer(1000, 'ns')
+        run = await dev_pf0_bar0.read_dword(0x001100)
+        if run == 0:
+            break
 
-    # # read status
-    # status = await dev_pf0_bar0.read_dword(0x000000)
-    # tb.log.info("DMA Status: 0x%x", status)
+    # read status
+    status = await dev_pf0_bar0.read_dword(0x000000)
+    tb.log.info("DMA Status: 0x%x", status)
 
-    # assert status & 0x300 == 0
+    assert status & 0x300 == 0
 
-    # tb.log.info("%s", mem.hexdump_str(dest_offset, region_len))
+    tb.log.info("%s", mem.hexdump_str(dest_offset, region_len))
 
-    # assert mem[src_offset:src_offset+region_len] == mem[dest_offset:dest_offset+region_len]
+    assert mem[src_offset:src_offset+region_len] == mem[dest_offset:dest_offset+region_len]
 
     await RisingEdge(dut.clk)
     await RisingEdge(dut.clk)
