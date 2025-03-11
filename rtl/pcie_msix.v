@@ -97,7 +97,7 @@ module pcie_msix #(
 );
 
     parameter TBL_ADDR_WIDTH = IRQ_INDEX_WIDTH + 1;
-    parameter PBA_ADDR_WIDTH = IRQ_INDEX_WIDTH > 6 ? IRQ_INDEX_WIDTH - 6 : 0;
+    parameter PBA_ADDR_WIDTH = IRQ_INDEX_WIDTH > 6 ? IRQ_INDEX_WIDTH - 6 : 1;
     parameter PBA_ADDR_WIDTH_INT = PBA_ADDR_WIDTH > 0 ? PBA_ADDR_WIDTH : 1;
 
     parameter INDEX_SHIFT = $clog2(64 / 8);
@@ -191,6 +191,7 @@ module pcie_msix #(
     // MSI-X PBA
     (* ram_style = "distributed", ramstyle = "no_rw_check, mlab" *)
     reg [63:0] pba_mem                [(2**PBA_ADDR_WIDTH)-1:0];
+    reg [63:0] pba_entries;
 
     reg tbl_rd_data_valid_reg = 1'b0, tbl_rd_data_valid_next;
     reg pba_rd_data_valid_reg = 1'b0, pba_rd_data_valid_next;
@@ -414,11 +415,11 @@ module pcie_msix #(
             tbl_mem_rd_data_reg <= tbl_mem[tbl_mem_addr];
         end
 
-        if (pba_mem_wr_en) begin
-            pba_mem[pba_mem_addr] <= pba_mem_wr_data;
-        end else if (pba_mem_rd_en) begin
-            pba_mem_rd_data_reg <= pba_mem[pba_mem_addr];
-        end
+        // if (pba_mem_wr_en) begin
+        //     pba_mem[pba_mem_addr] <= pba_mem_wr_data;
+        // end else if (pba_mem_rd_en) begin
+        //     pba_mem_rd_data_reg <= pba_mem[pba_mem_addr];
+        // end
 
         if (rst) begin
             state_reg <= STATE_IDLE;
@@ -501,6 +502,34 @@ module pcie_msix #(
         end
     end
 
+    generate
+        if(IRQ_INDEX_WIDTH > 6) begin
+            always @(posedge clk) begin
+                if (pba_mem_wr_en) begin
+                    pba_mem[pba_mem_addr] <= pba_mem_wr_data;
+                end else if (pba_mem_rd_en) begin
+                    pba_mem_rd_data_reg <= pba_mem[pba_mem_addr];
+                end
+                if (pba_axil_mem_rd_en) begin
+                    pba_axil_mem_rd_data_reg <= pba_mem[s_axil_araddr_index];
+                end
+            end
+
+        end else begin
+            always @(posedge clk) begin
+                if (pba_mem_wr_en) begin
+                    pba_entries <= pba_mem_wr_data;
+                end else if (pba_mem_rd_en) begin
+                    pba_mem_rd_data_reg <= pba_entries;
+                end
+                if (pba_axil_mem_rd_en) begin
+                    pba_axil_mem_rd_data_reg <= pba_entries;
+                end
+            end
+        end
+
+    endgenerate
+
     always @(posedge clk) begin
         tbl_rd_data_valid_reg <= tbl_rd_data_valid_next;
         pba_rd_data_valid_reg <= pba_rd_data_valid_next;
@@ -526,9 +555,9 @@ module pcie_msix #(
             end
         end
 
-        if (pba_axil_mem_rd_en) begin
-            pba_axil_mem_rd_data_reg <= pba_mem[s_axil_araddr_index];
-        end
+        // if (pba_axil_mem_rd_en) begin
+        //     pba_axil_mem_rd_data_reg <= pba_mem[s_axil_araddr_index];
+        // end
 
         if (rst) begin
             tbl_rd_data_valid_reg <= 1'b0;
